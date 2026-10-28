@@ -1,0 +1,54 @@
+plugins {
+	id 'com.gradleup.shadow' version '8.3.5'
+}
+
+architectury {
+	platformSetupLoomIde()
+	fabric()
+}
+
+configurations {
+	common {
+		canBeResolved = true
+		canBeConsumed = false
+	}
+	compileClasspath.extendsFrom common
+	runtimeClasspath.extendsFrom common
+	developmentFabric.extendsFrom common
+
+	// Isi configuration ini di-bundle ke jar lewat Shadow.
+	shadowBundle {
+		canBeResolved = true
+		canBeConsumed = false
+	}
+}
+
+dependencies {
+	modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+
+	common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+	shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
+}
+
+rootProject.ext.registerMetadata(project, 'fabric')
+
+// Dev environment (runClient dari IntelliJ/Gradle): resource modul :common ada di classpath tetapi
+// TIDAK dianggap bagian mod, sehingga namespace "enchantbookicons" tidak ditemukan
+// (gejala: "Unable to load model ... FileNotFoundException", texture ungu-hitam).
+// Solusi: salin hasil processResources :common ke resource modul loader ini. Hasil filter
+// :common (mis. items/ yang dikecualikan) ikut terbawa. Duplikat dengan jar common
+// yang di-bundle Shadow dibuang dengan EXCLUDE.
+processResources {
+	from(project(':common').tasks.named('processResources'))
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+shadowJar {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	configurations = [project.configurations.shadowBundle]
+	archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+	inputFile.set shadowJar.archiveFile
+}

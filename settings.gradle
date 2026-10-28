@@ -1,0 +1,32 @@
+pluginManagement {
+	repositories {
+		maven { name = 'Fabric';       url = 'https://maven.fabricmc.net/' }
+		maven { name = 'Architectury'; url = 'https://maven.architectury.dev/' }
+		maven { name = 'Forge';        url = 'https://maven.minecraftforge.net/' }
+		maven { name = 'NeoForged';    url = 'https://maven.neoforged.net/releases/' }
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}
+
+// Profil dipilih dengan:  gradlew dist -Pmc=<nama file di folder versions/>
+def mcProfile = (providers.gradleProperty('mc').orNull ?: '1.21.1').toString()
+def profileFile = file("versions/${mcProfile}.properties")
+if (!profileFile.exists()) {
+	def available = file('versions').listFiles()
+			.findAll { it.name.endsWith('.properties') }
+			.collect { it.name - '.properties' }
+			.sort()
+			.join(', ')
+	throw new GradleException("Profil '${mcProfile}' tidak ditemukan. Pilihan: ${available}")
+}
+def profile = new Properties()
+profileFile.withInputStream { profile.load(it) }
+
+rootProject.name = 'enchantbookicons'
+
+// Profil "data" (1.21.5+) tidak punya kode -> tidak ada subproject, tidak ada Loom/Architectury.
+if (profile.getProperty('variant') != 'data') {
+	include 'common'
+	profile.getProperty('loaders').split(',').collect { it.trim() }.each { include it }
+}

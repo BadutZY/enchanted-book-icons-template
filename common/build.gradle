@@ -1,0 +1,28 @@
+// Modul bersama: kode + asset yang dipakai Fabric, Forge, dan NeoForge.
+architectury {
+	common(rootProject.ext.loaderList as String[])
+}
+
+// LegacyBookIcons.java berbeda per kelompok versi -> dipilih lewat "variant" di profil
+sourceSets.main.java.srcDir("src/variants/${rootProject.ext.profileProp('variant')}/java")
+// Resource khusus varian (mis. mixin config + items/enchanted_book.json untuk 1.21.4)
+sourceSets.main.resources.srcDir("src/variants/${rootProject.ext.profileProp('variant')}/resources")
+
+dependencies {
+	// Hanya agar dependensi mixin/annotation Fabric tersedia saat kompilasi common.
+	modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+}
+
+processResources {
+	// items/enchanted_book.json di src/main (jalur data 1.21.5+, select "component") TIDAK boleh
+	// masuk profil berkode. Varian "mixin" (1.21.4) membawa items/ versinya sendiri dari
+	// src/variants/mixin/resources, yang tidak ikut terbuang oleh filter ini.
+	exclude { FileTreeElement e ->
+		e.file.absolutePath.replace('\\', '/').contains('/src/main/resources/') &&
+				e.relativePath.pathString.startsWith('assets/minecraft/items/')
+	}
+	// 1.21.4 tidak lagi membaca "overrides"; pakai model enchanted_book bawaan Minecraft.
+	if (project.rootProject.ext.hasMixin) {
+		exclude 'assets/minecraft/models/item/enchanted_book.json'
+	}
+}

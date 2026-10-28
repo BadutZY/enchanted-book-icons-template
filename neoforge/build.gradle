@@ -1,0 +1,64 @@
+plugins {
+	id 'com.gradleup.shadow' version '8.3.5'
+}
+
+architectury {
+	platformSetupLoomIde()
+	neoForge()
+}
+
+repositories {
+	// log4j (versi dinamis "2.11.+" dari net.minecraftforge:unsafe) hanya ada di Maven Central.
+	// Tanpa filter ini Gradle ikut menanyai maven.neoforged.net untuk daftar versinya, dan
+	// kalau server itu sedang 502 (Bad Gateway) seluruh konfigurasi proyek gagal.
+	maven {
+		url = 'https://maven.neoforged.net/releases/'
+		content { excludeGroup 'org.apache.logging.log4j' }
+	}
+	mavenCentral()
+}
+
+configurations {
+	common {
+		canBeResolved = true
+		canBeConsumed = false
+	}
+	compileClasspath.extendsFrom common
+	runtimeClasspath.extendsFrom common
+	developmentNeoForge.extendsFrom common
+
+	shadowBundle {
+		canBeResolved = true
+		canBeConsumed = false
+	}
+}
+
+dependencies {
+	neoForge "net.neoforged:neoforge:${rootProject.ext.profileProp('neoforge_version')}"
+
+	common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+	shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
+}
+
+rootProject.ext.registerMetadata(project, 'neoforge')
+
+// Dev environment (runClient dari IntelliJ/Gradle): resource modul :common ada di classpath tetapi
+// TIDAK dianggap bagian mod, sehingga namespace "enchantbookicons" tidak ditemukan
+// (gejala: "Unable to load model ... FileNotFoundException", texture ungu-hitam).
+// Solusi: salin hasil processResources :common ke resource modul loader ini. Hasil filter
+// :common (mis. items/ yang dikecualikan) ikut terbawa. Duplikat dengan jar common
+// yang di-bundle Shadow dibuang dengan EXCLUDE.
+processResources {
+	from(project(':common').tasks.named('processResources'))
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+shadowJar {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	configurations = [project.configurations.shadowBundle]
+	archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+	inputFile.set shadowJar.archiveFile
+}

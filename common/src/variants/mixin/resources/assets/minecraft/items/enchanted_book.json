@@ -1,0 +1,314 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "protection",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/protection"
+        }
+      },
+      {
+        "when": "fire_protection",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/fire_protection"
+        }
+      },
+      {
+        "when": "feather_falling",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/feather_falling"
+        }
+      },
+      {
+        "when": "blast_protection",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/blast_protection"
+        }
+      },
+      {
+        "when": "projectile_protection",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/projectile_protection"
+        }
+      },
+      {
+        "when": "respiration",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/respiration"
+        }
+      },
+      {
+        "when": "aqua_affinity",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/aqua_affinity"
+        }
+      },
+      {
+        "when": "thorns",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/thorns"
+        }
+      },
+      {
+        "when": "depth_strider",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/depth_strider"
+        }
+      },
+      {
+        "when": "frost_walker",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/frost_walker"
+        }
+      },
+      {
+        "when": "soul_speed",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/soul_speed"
+        }
+      },
+      {
+        "when": "swift_sneak",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/swift_sneak"
+        }
+      },
+      {
+        "when": "sharpness",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/sharpness"
+        }
+      },
+      {
+        "when": "smite",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/smite"
+        }
+      },
+      {
+        "when": "bane_of_arthropods",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/bane_of_arthropods"
+        }
+      },
+      {
+        "when": "knockback",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/knockback"
+        }
+      },
+      {
+        "when": "fire_aspect",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/fire_aspect"
+        }
+      },
+      {
+        "when": "looting",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/looting"
+        }
+      },
+      {
+        "when": "sweeping_edge",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/sweeping_edge"
+        }
+      },
+      {
+        "when": "efficiency",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/efficiency"
+        }
+      },
+      {
+        "when": "silk_touch",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/silk_touch"
+        }
+      },
+      {
+        "when": "unbreaking",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/unbreaking"
+        }
+      },
+      {
+        "when": "fortune",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/fortune"
+        }
+      },
+      {
+        "when": "power",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/power"
+        }
+      },
+      {
+        "when": "punch",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/punch"
+        }
+      },
+      {
+        "when": "flame",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/flame"
+        }
+      },
+      {
+        "when": "infinity",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/infinity"
+        }
+      },
+      {
+        "when": "luck_of_the_sea",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/luck_of_the_sea"
+        }
+      },
+      {
+        "when": "lure",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/lure"
+        }
+      },
+      {
+        "when": "loyalty",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/loyalty"
+        }
+      },
+      {
+        "when": "impaling",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/impaling"
+        }
+      },
+      {
+        "when": "riptide",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/riptide"
+        }
+      },
+      {
+        "when": "channeling",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/channeling"
+        }
+      },
+      {
+        "when": "multishot",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/multishot"
+        }
+      },
+      {
+        "when": "quick_charge",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/quick_charge"
+        }
+      },
+      {
+        "when": "piercing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/piercing"
+        }
+      },
+      {
+        "when": "density",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/density"
+        }
+      },
+      {
+        "when": "breach",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/breach"
+        }
+      },
+      {
+        "when": "wind_burst",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/wind_burst"
+        }
+      },
+      {
+        "when": "lunge",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/lunge"
+        }
+      },
+      {
+        "when": "mending",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/mending"
+        }
+      },
+      {
+        "when": "binding_curse",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/binding_curse"
+        }
+      },
+      {
+        "when": "vanishing_curse",
+        "model": {
+          "type": "minecraft:model",
+          "model": "enchantbookicons:item/vanishing_curse"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/enchanted_book"
+    }
+  }
+}

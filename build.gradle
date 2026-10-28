@@ -1,0 +1,207 @@
+import groovy.json.JsonOutput
+
+plugins {
+	// Hanya di-load di sini; baru DITERAPKAN di bawah jika profil punya kode (bukan "data").
+	id 'architectury-plugin' version "${architectury_plugin_version}" apply false
+	id 'dev.architectury.loom' version "${loom_version}" apply false
+}
+
+// ---------------------------------------------------------------------------
+// Profil versi Minecraft: pilih dengan  gradlew dist -Pmc=<profil>   (default 1.21.1)
+// ---------------------------------------------------------------------------
+def mcProfile = (findProperty('mc') ?: '1.21.1').toString()
+def profile = new Properties()
+file("versions/${mcProfile}.properties").withInputStream { profile.load(it) }
+
+def variant = profile.getProperty('variant')
+def isData = variant == 'data'
+def hasMixin = variant == 'mixin'
+def javaVersion = profile.getProperty('java_version').toInteger()
+def loaderList = isData ? ['fabric', 'forge', 'neoforge'] : profile.getProperty('loaders').split(',').collect { it.trim() }
+def fullVersion = "${mod_version}+${profile.getProperty('label')}"
+
+ext.profile = profile
+ext.isData = isData
+ext.hasMixin = hasMixin
+ext.loaderList = loaderList
+ext.fullVersion = fullVersion
+ext.profileProp = { String key -> profile.getProperty(key) }
+
+version = fullVersion
+group = maven_group
+
+println "[enchantbookicons] profil=${mcProfile}  varian=${variant}  loader=${loaderList.join(',')}  java=${javaVersion}"
+
+// ---------------------------------------------------------------------------
+// Metadata (fabric.mod.json, mods.toml, neoforge.mods.toml, pack.mcmeta) dibuat dari
+// template di folder metadata/ supaya satu sumber untuk semua profil dan loader.
+// ---------------------------------------------------------------------------
+def tokens = {
+	def p = { String k -> profile.getProperty(k) ?: '' }
+	def mcDepends = JsonOutput.toJson(p('fabric_mc_depends').split('\\|').collect { it.trim() })
+	def entry = isData ? '' :
+			',\n  "entrypoints": {\n    "client": [\n      "com.enchantbookicons.fabric.EnchantBookIconsFabric"\n    ]\n  }'
+	def mixinJson = hasMixin ? ',\n  "mixins": [\n    "enchantbookicons.mixins.json"\n  ]' : ''
+	def mixinToml = hasMixin ? '\n[[mixins]]\nconfig="enchantbookicons.mixins.json"\n' : ''
+	return [
+			mod_id            : mod_id,
+			mod_name          : mod_name,
+			mod_version       : fullVersion,
+			description       : mod_description,
+			authors           : mod_authors,
+			license           : mod_license,
+			java_version      : javaVersion.toString(),
+			pack_format       : p('pack_format'),
+			fabric_loader_min : p('fabric_loader_min'),
+			fabric_mc_depends : mcDepends,
+			fabric_entrypoints: entry,
+			fabric_mixins     : mixinJson,
+			toml_mixins       : mixinToml,
+			forge_mod_loader  : isData ? 'lowcodefml' : 'javafml',
+			forge_loader_range: isData ? '[1,)' : "[${p('forge_major')},)".toString(),
+			forge_mc_range    : p('forge_mc_range'),
+			neoforge_mod_loader: isData ? 'lowcodefml' : 'javafml',
+			neoforge_min      : p('neoforge_min'),
+			neoforge_mc_range : p('neoforge_mc_range'),
+	]
+}
+
+def render = { String template, File out ->
+	String text = file("metadata/${template}.tpl").text
+	tokens().each { k, v -> text = text.replace("@${k}@".toString(), v.toString()) }
+	def left = (text =~ /@[a-z_]+@/)
+	if (left.find()) {
+		throw new GradleException("Token belum terisi di metadata/${template}.tpl: ${left.group()}")
+	}
+	out.parentFile.mkdirs()
+	out.text = text
+}
+
+// Menulis metadata untuk satu loader (atau semuanya untuk jar universal)
+def writeMetadata = { String loader, File dir ->
+	if (loader == 'fabric' || loader == 'all') {
+		render('fabric.mod.json', new File(dir, 'fabric.mod.json'))
+	}
+	if (loader == 'forge' || loader == 'all') {
+		render('forge.mods.toml', new File(dir, 'META-INF/mods.toml'))
+		render('pack.mcmeta', new File(dir, 'pack.mcmeta'))
+	}
+	if (loader == 'neoforge' || loader == 'all') {
+		def tomlName = isData ? 'neoforge.mods.toml' : profile.getProperty('neoforge_toml')
+		render('neoforge.mods.toml', new File(dir, "META-INF/${tomlName}"))
+		render('pack.mcmeta', new File(dir, 'pack.mcmeta'))
+	}
+}
+
+// Dipanggil dari build.gradle tiap loader
+ext.registerMetadata = { Project proj, String loader ->
+	def outDir = proj.layout.buildDirectory.dir('generated/metadata')
+	def gen = proj.tasks.register('generateMetadata') {
+		inputs.dir(rootProject.file('metadata'))
+		inputs.file(rootProject.file("versions/${mcProfile}.properties"))
+		outputs.dir(outDir)
+		doLast { writeMetadata(loader, outDir.get().asFile) }
+	}
+	proj.tasks.named('processResources') {
+		dependsOn gen
+		from(outDir)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Profil "data" (1.21.5+): satu jar universal, tanpa kompilasi apa pun
+// ---------------------------------------------------------------------------
+if (isData) {
+	apply plugin: 'java'
+
+	layout.buildDirectory.set(file("build/${mcProfile}"))
+	base { archivesName = "${mod_id}-universal" }
+
+	def metaDir = layout.buildDirectory.dir('generated/metadata')
+	def gen = tasks.register('generateMetadata') {
+		inputs.dir(file('metadata'))
+		inputs.file(file("versions/${mcProfile}.properties"))
+		outputs.dir(metaDir)
+		doLast { writeMetadata('all', metaDir.get().asFile) }
+	}
+
+	sourceSets.main.resources.srcDir('common/src/main/resources')
+
+	processResources {
+		dependsOn gen
+		from(metaDir)
+		// Model "overrides" lama hanya dipakai jalur Java (1.19 - 1.21.3)
+		exclude 'assets/minecraft/models/item/enchanted_book.json'
+	}
+
+	jar {
+		from('LICENSE') { rename { "${it}_${mod_id}" } }
+	}
+
+	tasks.register('dist', Copy) {
+		group = 'build'
+		description = 'Salin jar universal ke dist/'
+		dependsOn tasks.named('jar')
+		from(tasks.named('jar').flatMap { it.archiveFile })
+		into(rootProject.file('dist'))
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Profil dengan kode (1.19.2 - 1.21.1): Architectury common + Fabric/Forge/NeoForge
+// ---------------------------------------------------------------------------
+if (!isData) {
+	apply plugin: 'architectury-plugin'
+
+	architectury {
+		minecraft = profile.getProperty('minecraft_version')
+	}
+
+	subprojects {
+		apply plugin: 'java'
+		apply plugin: 'dev.architectury.loom'
+		apply plugin: 'architectury-plugin'
+
+		base { archivesName = "${rootProject.mod_id}-${project.name}" }
+		version = rootProject.ext.fullVersion
+		group = rootProject.maven_group
+
+		loom {
+			silentMojangMappingsLicense()
+			// Varian "mixin" (1.21.4): TIDAK memakai refmap / annotation processor Mixin lama.
+			// Refmap lama dibuat untuk nama intermediary (Fabric) saja, sehingga di Forge (SRG) dan
+			// NeoForge (Mojang) mixin gagal ("target class net/minecraft/class_10442 not supported").
+			// Tanpa AP, Loom me-remap target mixin langsung saat remapJar sesuai loader masing-masing.
+		}
+
+		dependencies {
+			minecraft "com.mojang:minecraft:${rootProject.ext.profileProp('minecraft_version')}"
+			mappings loom.officialMojangMappings()
+		}
+
+		tasks.withType(JavaCompile).configureEach {
+			options.encoding = 'UTF-8'
+			options.release = javaVersion
+		}
+	}
+
+	tasks.register('dist', Copy) {
+		group = 'build'
+		description = 'Bangun semua loader profil ini dan salin jar-nya ke dist/'
+		into(rootProject.file('dist'))
+		loaderList.each { l ->
+			dependsOn ":${l}:build"
+			from(file("${l}/build/libs")) {
+				include "${mod_id}-${l}-${fullVersion}.jar"
+			}
+		}
+		// NeoForge 1.20.1 adalah fork Forge yang masih memakai package net.minecraftforge, jadi jar
+		// Forge-nya berjalan apa adanya. Salin dengan nama "neoforge" supaya mudah diunggah.
+		if (profile.getProperty('neoforge_via_forge') == 'true') {
+			from(file('forge/build/libs')) {
+				include "${mod_id}-forge-${fullVersion}.jar"
+				rename { "${mod_id}-neoforge-${fullVersion}.jar".toString() }
+			}
+		}
+	}
+}
